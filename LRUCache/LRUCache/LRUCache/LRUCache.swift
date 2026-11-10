@@ -134,7 +134,7 @@ final class LRUCache<Key: Hashable, Value> {
     
     //MARK: - Remove All
     
-    private func removeAll() {
+    func removeAll() {
         cache.removeAll()
         head = nil
         tail = nil

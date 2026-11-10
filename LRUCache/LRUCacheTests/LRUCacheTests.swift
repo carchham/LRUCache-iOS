@@ -9,28 +9,116 @@ import XCTest
 @testable import LRUCache
 
 final class LRUCacheTests: XCTestCase {
-
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+    
+    // MARK: - Basic Operations
+    
+    func testInsetAndGetValue() {
+        
+        //Arrange
+        let cache = LRUCache<String, Int>(capacity: 3)
+        
+        //Act
+        cache.put("A", value: 100)
+        let result = cache.get("A")
+        
+        //Assert
+        XCTAssertEqual(result, 100)
     }
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    func testGetMissingKeyReturnsNil() {
+        let cache = LRUCache<String, Int>(capacity: 3)
+        
+        let result = cache.get("X")
+        
+        XCTAssertNil(result)
     }
-
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
+    
+    // MARK: - LRU Eviction
+    
+    func testEvictsLeastRecentlyUsedItem() {
+        let cache = LRUCache<String, Int>(capacity: 3)
+        
+        // Insert three items
+        cache.put("A", value: 100)
+        cache.put("B", value: 200)
+        cache.put("C", value: 300)
+        
+        // Access A, making it most recently used
+        let v = cache.get("A")
+        
+        // Insert D, exceeding capacity
+        cache.put("D", value: 400)
+        
+        // Verify eviction
+        XCTAssertNil(cache.get("B"))
+        
+        // Verify remaining items
+        XCTAssertEqual(cache.get("A"), 100)
+        XCTAssertEqual(cache.get("C"), 300)
+        XCTAssertEqual(cache.get("D"), 400)
+        
+        XCTAssertEqual(cache.count, 3)
     }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
+    
+    // MARK: - Update Existing Key
+    
+    func testUpdateExitingKey() {
+        let cache = LRUCache<String, Int>(capacity: 2)
+        
+        cache.put("A", value: 100)
+        cache.put("B", value: 200)
+        
+        cache.put("A", value: 999)
+        
+        XCTAssertEqual(cache.get("A"), 999)
+        XCTAssertEqual(cache.count, 2)
+        
+        // B should be evicted when C is inserted
+        cache.put("C", value: 300)
+        
+        XCTAssertNil(cache.get("B"))
+        XCTAssertEqual(cache.get("A"), 999)
     }
-
+    
+    // MARK: - Edge Cases
+    
+    func testZeroCapacity() {
+        let cache = LRUCache<String, Int>(capacity: 0)
+        
+        cache.put("A", value: 100)
+        
+        XCTAssertNil(cache.get("A"))
+        XCTAssertEqual(cache.count, 0)
+    }
+    
+    func testOneCapacity() {
+        let cache = LRUCache<String, Int>(capacity: 1)
+        
+        cache.put("A", value: 100)
+        
+        XCTAssertEqual(cache.get("A"), 100)
+        
+        cache.put("B", value: 200)
+        
+        XCTAssertNil(cache.get("A"))
+        XCTAssertEqual(cache.get("B"), 200)
+        
+        XCTAssertEqual(cache.count, 1)
+    }
+    
+    func testRemoveAll() {
+        let cache = LRUCache<String, Int>(capacity: 3)
+        
+        cache.put("A", value: 100)
+        cache.put("B", value: 200)
+        cache.put("C", value: 300)
+        
+        cache.removeAll()
+        
+        XCTAssertEqual(cache.count, 0)
+        
+        XCTAssertNil(cache.get("A"))
+        XCTAssertNil(cache.get("B"))
+        XCTAssertNil(cache.get("C"))
+    }
 }
